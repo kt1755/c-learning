@@ -1,0 +1,13 @@
+fd1 = open(file, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
+fd2 = dup(fd1);
+fd3 = open(file, O_RDWR);
+write(fd1, "Hello,", 6); -- write 1
+write(fd2, "world", 6);  -- write 2
+lseek(fd2, 0, SEEK_SET);
+write(fd1, "HELLO,", 6); -- write 3
+write(fd3, "Gidday", 6); -- write 4
+
+Sau w 1: File được ghi dữ liệu; "Hello,"
+Sau w 2: File được ghi dữ liệu thành "Hello, world", do fd1 và fd2 chung file offset
+Sau w 3: File được ghi dữ liệu thành "HELLO, world", do fd1 và fd2 chung file offset và offset đã được reset về đầu file qua lseek, và ghi đè các byte đầu tiên
+Sau w 4: File được ghi dữ liệu thành "Gidday world", do fd3 đang ở offset về 0 do open file độc lập với 2 fd còn lại.

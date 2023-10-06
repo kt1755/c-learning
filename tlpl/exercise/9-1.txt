@@ -1,0 +1,26 @@
+a) setuid(2000): real=1000 effective=0 saved=0 file-system=0
+    Do setuid chỉ có thể thay đổi real khi đó là privileged process (real=0) -> real không thay đổi
+    Effective chỉ có thể có 1 trong các giá trị sau: 1000 (real) và 0 (effective hiện tại)
+
+b) setreuid(–1, 2000): real=1000 effective=0 saved=0 file-system=0
+    Do input ruid = -1 nên real không thay đổi
+    Effective chỉ có thể có 1 trong các giá trị sau: 1000 (real) và 0 (effective hiện tại)
+
+c) seteuid(2000): real=1000 effective=0 saved=0 file-system=0
+    Behave giống như setuid, do là unprivileged process
+
+d) setfsuid(2000): real=1000 effective=0 saved=0 file-system=0
+    Không thể thay đổi file system id nếu là unprivileged process
+
+e) setresuid(–1, 2000, 3000): real=1000 effective=0 saved=3000 file-system=0
+    Chỉ thay đổi saved-set-uid
+
+Lời giải: Cho privileged process
+a) real=2000, effective=2000, saved=2000, file-system=2000
+b) real=1000, effective=2000, saved=2000, file-system=2000
+c) real=1000, effective=2000, saved=0, file-system=2000
+d) real=1000, effective=0, saved=0, file-system=2000
+e) real=1000, effective=2000, saved=3000, file-system=2000
+
+-> Trả lời sai do hiểu sai 'privileged process'. Privileged process là process có "effective user id = 0", là id của superuser. Ban đầu process có euid=0 nên
+mọi thay đổi đều có thể áp dụng.

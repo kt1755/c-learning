@@ -1,0 +1,6 @@
+Là privileged process, do có real user id = 0, là superuser.
+Khi reset privileged (setuid(getuid())) thì effective user id sẽ về 0, là privileged.
+
+Đáp án
+Chặt chẽ mà nói thì ko phải privileged do có effective != 0
+Nhưng có thể lấy lại quyền privileged bằng cách reset id (setuid(getuid()))
