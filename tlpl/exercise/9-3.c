@@ -26,7 +26,11 @@ int initgroups_impl(const char *user, gid_t group)
     while ((grp = getgrent()) != NULL)
     {
         grMem = grp->gr_mem;
-        printf("Value group (%s) mem: %s \n",grp->gr_name, *grMem);
+        if (*grMem != NULL)
+        {
+            printf("Value group (%s) mem: %s \n", grp->gr_name, *grMem);
+        }
+
         // while (*grMem != NULL)
         // {
         //     if (strcmp(**grMem, user) == 0)
@@ -59,7 +63,9 @@ struct passwd *userFromName(const char *name)
 int main(int argc, char const *argv[])
 {
     int n;
-    n = initgroups_impl("thu", 0);
+    char *username;
+    username = getlogin();
+    n = initgroups_impl(username, 0);
     printf("%d", n);
     return 0;
 }
