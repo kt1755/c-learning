@@ -96,15 +96,47 @@ struct passwd *userFromName(const char *name)
 int main(int argc, char const *argv[])
 {
     int n;
+    unsigned int euid;
     char *username;
     username = getlogin();
     printf("Check username: %s\n", username);
+
+    setuid(0);
+
+    euid = geteuid();
+    printf("Current effective id: %d", euid);
+
+    long maxGroups;
+    maxGroups = sysconf(_SC_NGROUPS_MAX);
+    gid_t *grouplist;
+    // grouplist = malloc(sizeof(gid_t) * maxGroups);
+
+   int currentGroupNum ;
+   currentGroupNum = getgroups(0, grouplist);
+
+   grouplist = malloc(sizeof(gid_t) * currentGroupNum);
+
+
+    if (getgroups(currentGroupNum, grouplist) == -1)
+    {
+        printf("Error when get current group\n");
+    }
+    else
+    {
+        for (int i = 0; i < currentGroupNum; i++)
+        {
+            printf("%d ", grouplist[i]);
+        }
+        printf("\n");
+    }
+
     n = initgroups_impl(username, 0);
     printf("%d\n", n);
-    
-    if (n == -1) {
+
+    if (n == -1)
+    {
         perror("initgroups_impl failed");
     }
-    
+
     return 0;
 }
