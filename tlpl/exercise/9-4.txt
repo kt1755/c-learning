@@ -1,0 +1,8 @@
+a
+getresuid(ruid, euid, suid);
+
+- Move euid to X: seteuid(ruid)
+- Resume euid to Y: seteuid(suid)
+
+b
+setresuid(-1, ruid, ruid);
