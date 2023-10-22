@@ -55,6 +55,13 @@ int main(int argc, char const *argv[])
         exit(EXIT_FAILURE);
     }
 
+    struct dirent *procDirent;
+
+    while ((procDirent = readdir(procDir)) != NULL)
+    {
+        
+    }
+
     closedir(procDir);
 
     /* code */
