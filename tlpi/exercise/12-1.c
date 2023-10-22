@@ -1,3 +1,5 @@
+#define _GNU_SOURCE
+
 #include <stdio.h>
 #include <unistd.h>
 #include <pwd.h>
@@ -6,8 +8,10 @@
 #include <errno.h>
 #include <dirent.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 
 uid_t userIDFromName(const char *name);
+_Bool IsDir(struct dirent *de);
 
 // Step thực hiện
 // 1. Loop toàn bộ thư mục /proc
@@ -20,7 +24,7 @@ int main(int argc, char const *argv[])
     unsigned int euid;
     char const *username;
 
-    if (argc >= 2 || strcmp(argv[1], "--help") == 0)
+    if (argc > 2)
     {
         errnum = errno;
         printf("Current errnum %d\n", errnum);
@@ -56,10 +60,15 @@ int main(int argc, char const *argv[])
     }
 
     struct dirent *procDirent;
+    struct dirent *pidDirent;
 
     while ((procDirent = readdir(procDir)) != NULL)
     {
-        
+        if(IsDir(procDirent)) {
+            printf("File %s is directory \n", procDirent->d_name);
+
+            // pidDir = opendir(procDirent->d_name);
+        }
     }
 
     closedir(procDir);
@@ -84,4 +93,24 @@ uid_t userIDFromName(const char *name)
     pwd = getpwnam(name);
 
     return pwd->pw_uid;
+}
+
+_Bool IsDir(struct dirent *de)
+{
+    _Bool is_dir;
+#ifdef _DIRENT_HAVE_D_TYPE
+    if (de->d_type != DT_UNKNOWN && de->d_type != DT_LNK)
+    {
+        is_dir = (de->d_type == DT_DIR);
+    }
+    else
+#endif
+    {
+        struct stat stbuf;
+        // stat follows symlinks, lstat doesn't.
+        stat(de->d_name, &stbuf); // TODO: error check
+        is_dir = S_ISDIR(stbuf.st_mode);
+    }
+
+    return is_dir;
 }
