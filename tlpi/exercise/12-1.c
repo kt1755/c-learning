@@ -53,9 +53,10 @@ int main(int argc, char const *argv[])
     DIR *procDir;
     DIR *pidDir;
 
+    errno = 0;
     if ((procDir = opendir("/proc")) == NULL)
     {
-        printf("Không thể mở thư mục /proc \n");
+        perror("Không thể mở thư mục /proc \n");
         exit(EXIT_FAILURE);
     }
 
