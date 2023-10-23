@@ -65,10 +65,33 @@ int main(int argc, char const *argv[])
 
     while ((procDirent = readdir(procDir)) != NULL)
     {
-        if(IsDir(procDirent)) {
-            printf("File %s is directory \n", procDirent->d_name);
+        if (!IsDir(procDirent))
+        {
+            continue;
+        }
 
-            // pidDir = opendir(procDirent->d_name);
+        printf("File %s inside /proc is directory \n", procDirent->d_name);
+        
+        errno = 0;
+        pidDir = opendir(procDirent->d_name);
+        if (pidDir == NULL)
+        {
+            if (errno == ENOENT)
+            {
+                printf("File %s not exist, ignore\n", procDirent->d_name);
+                continue;
+            }
+            else
+            {
+                perror("Không thể mở file");
+            }
+
+            continue;
+        }
+
+        while ((pidDirent = readdir(pidDir)) != NULL)
+        {
+            printf("Found file %s inside %s\n", pidDirent->d_name, procDirent->d_name);
         }
     }
 
