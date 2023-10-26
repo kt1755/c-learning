@@ -9,6 +9,7 @@
 #include <dirent.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <ctype.h>
 
 uid_t userIDFromName(const char *name);
 _Bool IsDir(struct dirent *de);
@@ -49,6 +50,8 @@ int main(int argc, char const *argv[])
         exit(EXIT_FAILURE);
     }
 
+    printf("Username %s have id %d\n", username, euid);
+
     // Định nghĩa và đọc directory
     DIR *procDir;
     DIR *pidDir;
@@ -71,14 +74,19 @@ int main(int argc, char const *argv[])
         }
 
         printf("File %s inside /proc is directory \n", procDirent->d_name);
-        
+        char *pidDirName;
+        pidDirName = calloc(256, sizeof(char));
+        strcat(pidDirName, "/proc/");
+        strcat(pidDirName, procDirent->d_name);
+        printf("Full path file: %s \n", pidDirName);
+
         errno = 0;
-        pidDir = opendir(procDirent->d_name);
+        pidDir = opendir(pidDirName);
         if (pidDir == NULL)
         {
             if (errno == ENOENT)
             {
-                printf("File %s not exist, ignore\n", procDirent->d_name);
+                printf("File %s not exist, ignore\n", pidDirName);
                 continue;
             }
             else
@@ -91,8 +99,58 @@ int main(int argc, char const *argv[])
 
         while ((pidDirent = readdir(pidDir)) != NULL)
         {
-            printf("Found file %s inside %s\n", pidDirent->d_name, procDirent->d_name);
+            // printf("Found file %s inside %s\n", pidDirent->d_name, pidDirName);
+            if (strcasecmp(pidDirent->d_name, "status") == 0)
+            {
+                char *statusPath;
+                statusPath = calloc(256, sizeof(char));
+                strcat(statusPath, pidDirName);
+                strcat(statusPath, "/");
+                strcat(statusPath, pidDirent->d_name);
+
+                FILE *statusFile;
+                statusFile = fopen(statusPath, "r");
+                if (statusFile == NULL)
+                {
+                    printf("file %s inside %s not found, ignore parse.\n", statusPath, pidDirName);
+                    continue;
+                }
+
+                printf("Start read file %s inside %s \n", statusPath, pidDirName);
+                // Đọc file, line by line
+                char line[100];
+                while (fgets(line, sizeof(line), statusFile) != NULL)
+                {
+                    char *tail;
+                    char *key;
+                    char *value;
+                    tail = strchr(line, '\n');
+                    if (tail != NULL)
+                        *tail = '\0'; /* remove the trailing '\n' */
+                    tail = strchr(line, ':');
+                    if (tail != NULL)
+                    {
+                        tail[0] = '\0';
+                        key = strdup(line);
+                        if (key == NULL)
+                            continue;
+                        tail += 1;
+                        while ((tail[0] != '\0') && (isspace((int)tail[0]) != 0))
+                            tail++;
+                        value = strdup(tail);
+                        if (value != NULL)
+                        {
+                            fprintf(stderr, "%s --> %s\n", key, value);
+                            /* You could do something now with key/value */
+                            free(value);
+                        }
+                        free(key);
+                    }
+                }
+            }
         }
+
+        closedir(pidDir);
     }
 
     closedir(procDir);
