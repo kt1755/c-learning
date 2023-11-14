@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
     }
 
     errno = 0;
-    off_t offset = lseek(fd, 128, SEEK_END);
+    off_t offset = lseek(fd, 0, SEEK_END);
     if (offset == -1)
     {
         if (errno != 0)
@@ -76,21 +76,21 @@ int main(int argc, char *argv[])
     buff = malloc(sizeof(char) * BUF_SIZE);
     while (newLineCount < numOfLine)
     {
-        oldOffset = lseek(fd, -BUF_SIZE, SEEK_CUR);
+        oldOffset = lseek(fd, -1 * BUF_SIZE, SEEK_CUR); // Seek lùi lại từ cuối file
         if (oldOffset == -1)
         {
             if (errno != 0)
             {
-                
+
                 if (errno != EINVAL)
                 {
                     close(fd);
-                    perror("Error when lseek file file");
+                    perror("Error when lseek file file\n");
                     exit(EXIT_FAILURE);
                 }
                 else
                 {
-                    perror("Reach start of file. Show all file content");
+                    perror("Reach start of file. Show all file content\n");
                     oldOffset = lseek(fd, 0, SEEK_SET);
                     break;
                 }
@@ -103,14 +103,14 @@ int main(int argc, char *argv[])
             }
         }
 
-    
         if ((read(fd, buff, BUF_SIZE)) != -1)
         {
             printf("buff: %s \n", buff);
-            for (size_t i = 0; ; i++)
+            for (size_t i = 0;; i++)
             {
-                
-                if (buff[i] == '\0') {
+
+                if (buff[i] == '\0')
+                {
                     printf("Break when null character\n");
                     break;
                 }
@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
         offset = oldOffset;
     }
 
-printf("Start write file from offset found!\n");
+    printf("Start write file from offset found! \n");
     lseek(fd, 0, oldOffset);
     size_t readSize;
     while ((readSize = read(fd, buff, BUF_SIZE)) != -1)
