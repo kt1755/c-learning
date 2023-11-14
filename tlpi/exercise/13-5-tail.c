@@ -1,3 +1,4 @@
+#define _XOPEN_SOURCE 600
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -5,6 +6,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
+#include <fcntl.h>
 
 //
 
@@ -72,16 +74,16 @@ int main(int argc, char *argv[])
     off_t oldOffset = offset;
     int newLineCount = 0;
 
+    
     char *buff;
     buff = malloc(sizeof(char) * BUF_SIZE);
-    while (newLineCount < numOfLine)
+    while (1)
     {
         oldOffset = lseek(fd, -1 * BUF_SIZE, SEEK_CUR); // Seek lùi lại từ cuối file
         if (oldOffset == -1)
         {
             if (errno != 0)
             {
-
                 if (errno != EINVAL)
                 {
                     close(fd);
@@ -103,12 +105,12 @@ int main(int argc, char *argv[])
             }
         }
 
-        if ((read(fd, buff, BUF_SIZE)) != -1)
+        size_t newLineOffsetArray[BUF_SIZE];
+        if ((pread(fd, buff, BUF_SIZE, oldOffset)) != -1)
         {
-            printf("buff: %s \n", buff);
+            printf("buff= %s \n", buff);
             for (size_t i = 0;; i++)
             {
-
                 if (buff[i] == '\0')
                 {
                     printf("Break when null character\n");
@@ -117,20 +119,29 @@ int main(int argc, char *argv[])
                 if (buff[i] == '\n')
                 {
                     printf("Buffer in position %lu is newline \n", i);
-                    write(1, buff, BUF_SIZE);
-                    newLineCount += 1;
-                    break;
+                    newLineOffsetArray[newLineCount] = i;
+                    newLineCount += 1;                    
                 }
             }
+        }
 
-            lseek(fd, -BUF_SIZE, SEEK_CUR);
+        if (newLineCount >= numOfLine) {
+            int index = newLineCount - numOfLine+1;
+            printf("Index choosen: %d value %lu \n", index, newLineOffsetArray[index]);
+            oldOffset = oldOffset + newLineOffsetArray[index];
+            break;
         }
 
         offset = oldOffset;
     }
 
+    
+    memset(buff, '\0', BUF_SIZE);
     printf("Start write file from offset found! \n");
-    lseek(fd, 0, oldOffset);
+    printf("----------------------------------- \n");
+
+    posix_fadvise(fd, oldOffset, STD_BUFF_SIZE, POSIX_FADV_WILLNEED);
+    lseek(fd, oldOffset, SEEK_SET);
     size_t readSize;
     while ((readSize = read(fd, buff, BUF_SIZE)) != -1)
     {
