@@ -21,9 +21,24 @@ int main(int argc, char const *argv[])
             numOfFileStr = optarg;
             break;
 
-            case 'p':
+        case 'p':
             filePath = optarg;
         }
+    }
+
+    int numOfFile = atoi(numOfFileStr);
+    int fileNameNum = 0;
+    char *fullPath;
+    char *fileName;
+
+    srand(time(NULL));
+    for (int i = 0; i < numOfFile; i++)
+    {
+        fileNameNum = rand() % numOfFile;
+        sprintf(fileName, "x%6d", fileNameNum);
+        sprintf(fullPath,"%s/%s", filePath, fileName);
+
+        int fd = open(fullPath, O_CREAT | O_RDWR);
     }
 
     /* code */
