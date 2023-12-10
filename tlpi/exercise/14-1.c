@@ -87,12 +87,21 @@ int main(int argc, char *argv[])
 
     struct timeval *startDeleteFileTime;
     struct timeval *endDeleteFileTime;
-    gettimeofday(startDeleteFileTime, NULL);
+    if ( gettimeofday(startDeleteFileTime, NULL) == -1) {
+        perror("Không thể lấy được thời điểm bắt đầu delete\n");
+        exit(EXIT_FAILURE);
+    }
     for (int i = 0; i < numOfFile; i++)
     {
+        printf("Remove file at %d: %s\n", i, fileLinearArray[i]);
         remove(fileLinearArray[i]);
     }
-    gettimeofday(endDeleteFileTime, NULL);
+
+     if ( gettimeofday(endDeleteFileTime, NULL) == -1) {
+        perror("Không thể lấy được thời điểm kết thúc delete\n");
+        exit(EXIT_FAILURE);
+    }
+    
     printf("Delete all file in random created order: %ld seconds\n", endDeleteFileTime->tv_sec - startDeleteFileTime->tv_sec);
 
     /* code */
