@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <time.h>
-
+#include <sys/time.h>
 
 int main(int argc, char *argv[])
 {
@@ -35,51 +35,66 @@ int main(int argc, char *argv[])
 
     int numOfFile = atoi(numOfFileStr);
     int fileNameNum = 0;
-    char *fullPath = malloc(255 *sizeof(char));
-    char *fileName = malloc(255 *sizeof(char));
+
     char *fileArr[numOfFile];
+    char *fileLinearArray[numOfFile];
     int generatedNum[numOfFile];
-    for (int i = 0; i < numOfFile; i++) {
-        generatedNum[i] = i+1;
+    for (int i = 0; i < numOfFile; i++)
+    {
+        generatedNum[i] = i + 1;
+
+        char *fullPath = malloc(255 * sizeof(char));
+        char *fileName = malloc(255 * sizeof(char));
+
+        sprintf(fileName, "x%06d", i + 1); // segment fault
+        sprintf(fullPath, "%s/%s", filePath, fileName);
+
+        fileArr[i] = fullPath;
+        fileLinearArray[i] = fullPath;
     }
 
-    srand(time(NULL));
     // Shuffle the array to create random order
-    int tmp = 0;
+    char *tmp;
+    srand(time(NULL));
     for (int i = 0; i < numOfFile; i++)
     {
-        int j = rand() % numOfFile + 1;
+        int j = rand() % numOfFile;
 
-        tmp =  generatedNum[j];
-        generatedNum[j] = generatedNum[i];
-        generatedNum[i] = tmp;
+        tmp = fileArr[j];
+        fileArr[j] = fileArr[i];
+        fileArr[i] = tmp;
+
+        printf("Random at %d: %s\n", i, fileArr[i]);
     }
-
-
 
     for (int i = 0; i < numOfFile; i++)
     {
-        
-        fileNameNum = generatedNum[i];
-        sprintf(fileName, "x%06d", fileNameNum); //segment fault
-        sprintf(fullPath,"%s/%s", filePath, fileName);
-
-        // int fd = open(fullPath, O_CREAT | O_RDWR);
-        // if (fd == -1) {
-        //     perror("cannot open file");
-        //     exit(EXIT_FAILURE);
-        // }
-
-        // ftruncate(fd, 1);
-        // close(fd);
-
-        // fileArr[i] = fullPath;
-
-        printf("Random at %d: %s\n", i, fullPath);
+        printf("After shuffle at %d: %s\n", i, fileArr[i]);
     }
 
-    
+    for (int i = 0; i < numOfFile; i++)
+    {
+        int fd = open(fileArr[i], O_CREAT | O_RDWR);
+        if (fd == -1)
+        {
+            perror("cannot open file");
+            exit(EXIT_FAILURE);
+        }
+
+        ftruncate(fd, 1);
+        close(fd);
+    }
+
+    struct timeval *startDeleteFileTime;
+    struct timeval *endDeleteFileTime;
+    gettimeofday(startDeleteFileTime, NULL);
+    for (int i = 0; i < numOfFile; i++)
+    {
+        remove(fileLinearArray[i]);
+    }
+    gettimeofday(endDeleteFileTime, NULL);
+    printf("Delete all file in random created order: %ld seconds\n", endDeleteFileTime->tv_sec - startDeleteFileTime->tv_sec);
+
     /* code */
     return 0;
 }
-
