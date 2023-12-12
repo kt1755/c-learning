@@ -74,35 +74,51 @@ int main(int argc, char *argv[])
 
     for (int i = 0; i < numOfFile; i++)
     {
-        int fd = open(fileArr[i], O_CREAT | O_RDWR);
+        int fd = open(fileArr[i], O_CREAT | O_RDWR, S_IWOTH | S_IROTH | S_IRUSR | S_IWUSR);
         if (fd == -1)
         {
             perror("cannot open file");
             exit(EXIT_FAILURE);
         }
 
-        ftruncate(fd, 1);
+        // ftruncate(fd, 1);
+        write(fd, "A", 1);
         close(fd);
     }
+    sync();
 
-    struct timeval *startDeleteFileTime;
-    struct timeval *endDeleteFileTime;
-    if ( gettimeofday(startDeleteFileTime, NULL) == -1) {
+    struct timespec startDeleteFileTime;
+    struct timespec endDeleteFileTime;
+    if (clock_gettime(CLOCK_REALTIME, &startDeleteFileTime) == -1)
+    {
         perror("Không thể lấy được thời điểm bắt đầu delete\n");
         exit(EXIT_FAILURE);
     }
+
+    if (startDeleteFileTime.tv_sec == 0) {
+        printf("startDeleteFileTime NULL\n");
+    }
+
+    printf("Start remove all file\n");
     for (int i = 0; i < numOfFile; i++)
     {
         printf("Remove file at %d: %s\n", i, fileLinearArray[i]);
         remove(fileLinearArray[i]);
     }
+    sync();
 
-     if ( gettimeofday(endDeleteFileTime, NULL) == -1) {
+    if (clock_gettime(CLOCK_REALTIME, &endDeleteFileTime) == -1)
+    {
+        printf("Error gettimeofday with endDeleteFileTime");
         perror("Không thể lấy được thời điểm kết thúc delete\n");
         exit(EXIT_FAILURE);
     }
-    
-    printf("Delete all file in random created order: %ld seconds\n", endDeleteFileTime->tv_sec - startDeleteFileTime->tv_sec);
+    if (endDeleteFileTime.tv_sec == 0) {
+        printf("endDeleteFileTime NULL\n");
+    }
+
+    printf("Delete all file in random created order: %5.2f nanoseconds\n", (endDeleteFileTime.tv_sec - startDeleteFileTime.tv_sec) + (endDeleteFileTime.tv_nsec - startDeleteFileTime.tv_nsec)/1e9);
+    printf("OKE\n");
 
     /* code */
     return 0;
