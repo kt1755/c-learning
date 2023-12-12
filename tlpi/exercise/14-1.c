@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
         printf("endDeleteFileTime NULL\n");
     }
 
-    printf("Delete all file in random created order: %5.2f nanoseconds\n", (endDeleteFileTime.tv_sec - startDeleteFileTime.tv_sec) + (endDeleteFileTime.tv_nsec - startDeleteFileTime.tv_nsec)/1e9);
+    printf("Delete all file in random created order: %5.2f seconds\n", (endDeleteFileTime.tv_sec - startDeleteFileTime.tv_sec) + (endDeleteFileTime.tv_nsec - startDeleteFileTime.tv_nsec)/1e9);
     printf("OKE\n");
 
     /* code */
