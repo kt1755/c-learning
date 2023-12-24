@@ -17,8 +17,8 @@ int euidaccess(const char *pathname, int mode) {
       return -1; // No permission
    }
 
-   if (statbuf.st_mode & S_IRUSR) {
-      
+   if (statbuf.st_mode & F_OK) {
+
    }
 }
 
