@@ -31,3 +31,6 @@ Recover current: chmod 755 <folder>
 
 Khi gọi system call `stat()` thì không có timestamp nào trong 3 loại `st_atime`, `st_mtime` , `st_ctime` bị thay đổi, do `stat()` chị lấy thông tin file metadata chứ không thực hiện modify file.
 
+## 15-5
+
+Call `unmask(0)`, khi đó ko có bit bị xóa nên bit permission sẽ ko thay đổi, và `unmask` vẫn trả về permission bit hiện tại
