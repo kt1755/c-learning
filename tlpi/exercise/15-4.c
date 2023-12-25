@@ -7,7 +7,7 @@
 int euidaccess(const char *pathname, int mode)
 {
    errno = 0;
-   int allMode =  F_OK | R_OK | W_OK | X_OK;
+   int allMode = F_OK | R_OK | W_OK | X_OK;
    if (allMode & mode != mode)
    {
       printf("Mode check error, all mode %d value %d\n", allMode, mode);
@@ -34,10 +34,8 @@ int euidaccess(const char *pathname, int mode)
       return -1;
    }
 
-   printf("User id of file: %d\n",statbuf.st_uid); 
-   printf("Group id of file: %d\n",statbuf.st_gid);
-
-   
+   printf("User id of file: %d\n", statbuf.st_uid);
+   printf("Group id of file: %d\n", statbuf.st_gid);
 
    if (statbuf.st_uid != eeuid && statbuf.st_gid != eguid)
    {
@@ -46,22 +44,23 @@ int euidaccess(const char *pathname, int mode)
 
    printf("File st_mode: %d\n", statbuf.st_mode);
 
-   int permissionBit =  statbuf.st_mode & __S_IFMT;
-   
+   int permissionBit = statbuf.st_mode & __S_IFMT;
+
    printf("Permission bit: %d\n", permissionBit);
 
    int groupPermissionBit = (statbuf.st_mode >> 3); // Bit shift to get group permissions bit at the end
 
    printf("Current groupPermissionBit: %d\n", groupPermissionBit);
 
-// Check group permission bit with mode
+   // Check group permission bit with mode
    if ((groupPermissionBit & mode) == mode)
    {
       return 0;
    }
 
-// Check user permission bit with mode
-   if ((groupPermissionBit >> 3) & mode == mode) {
+   // Check user permission bit with mode
+   if ((groupPermissionBit >> 3) & mode == mode)
+   {
       return 0;
    }
 
@@ -83,13 +82,14 @@ int main(int argc, char *argv[])
    }
 
    printf("Check effective permission of file %s \n", filePath);
-   int mode = R_OK | X_OK;
+   int mode = R_OK | W_OK | X_OK;
 
-   if (euidaccess(filePath, mode) == -1) {
+   if (euidaccess(filePath, mode) == -1)
+   {
       perror("Không có permission");
       return -1;
    }
-   
+
    printf("Have permission %d by effective id\n", mode);
    return 0;
 }
