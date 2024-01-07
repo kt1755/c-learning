@@ -4,26 +4,44 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <stdbool.h>
+#include <sys/xattr.h>
+#include <stdlib.h>
+#include <string.h>
 
 int main(int argc, char *argv[])
 {
     char *eaStr;
+    char *eaValue;
     char *filePath;
     int opt;
-    while ((opt = getopt(argc, argv, ":e::f:r")) != -1)
+    while ((opt = getopt(argc, argv, ":a:f:v:")) != -1)
     {
         switch (opt)
         {
-        case 'e':
+        case 'a':
             eaStr = optarg;
+            break;
+
+        case 'v':
+            eaValue = optarg;
             break;
 
         case 'f':
             filePath = optarg;
+            break;
+
+        default:
+            printf("Option unknown: %c\n", opt);
         }
     }
 
+    printf("EA: %s\n", eaStr);
+    printf("EA value: %s\n", eaValue);
+    printf("File: %s\n", filePath);
 
-
-    return 0;
+    if (setxattr(filePath, eaStr, eaValue, strlen(eaValue), 0) == -1) {
+        perror("Set ea failed\n");
+        return EXIT_FAILURE;
+    }
+    return EXIT_SUCCESS;
 }
