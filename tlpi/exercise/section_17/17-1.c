@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
     gid_t groupID;
     uid_t userID;
 
-    switch (type)
+    switch (*type)
     {
     case 'u':
         userID = userIdFromName(idStr);
@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
         break;
     }
 
-    getchar
+    
 
     return 0;
 }
