@@ -49,17 +49,20 @@ int main(int argc, char *argv[])
     uid_t userID;
 
     acl_tag_t tagSelected;
+    bool showMask = false;
 
 
     switch (*type)
     {
     case 'u':
         userID = userIdFromName(idStr);
-        tagSelected = ACL_ADD_SUBDIRECTORY;
+        tagSelected = ACL_USER;
         break;
 
     case 'g':
         groupID = groupIdFromName(idStr);
+        tagSelected = ACL_GROUP;
+        showMask = true;
         break;
 
     default:
