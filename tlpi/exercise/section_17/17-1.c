@@ -2,7 +2,6 @@
 // gcc 17-1.c ugid_functions.c -o 17-1.out
 /***************/
 
-
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -13,6 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/acl.h> // $ sudo apt-get install libacl1-dev
+#include <acl/libacl.h>
 
 #include "ugid_functions.h"
 
@@ -20,7 +20,6 @@ int main(int argc, char *argv[])
 {
     char *type;
     char *idStr;
-    
 
     int opt;
     while ((opt = getopt(argc, argv, ":t:i:")) != -1)
@@ -40,8 +39,6 @@ int main(int argc, char *argv[])
         }
     }
 
-    
-
     char *fileName = argv[optind];
 
     printf("Type affected: %s\n", type);
@@ -51,10 +48,14 @@ int main(int argc, char *argv[])
     gid_t groupID;
     uid_t userID;
 
+    acl_tag_t tagSelected;
+
+
     switch (*type)
     {
     case 'u':
         userID = userIdFromName(idStr);
+        tagSelected = ACL_ADD_SUBDIRECTORY;
         break;
 
     case 'g':
@@ -71,15 +72,17 @@ int main(int argc, char *argv[])
     for (r = acl_get_entry(acl, ACL_FIRST_ENTRY, &entry); r > 0; r = acl_get_entry(acl, ACL_NEXT_ENTRY, &entry))
     {
         acl_tag_t tag;
-        if (acl_get_tag_type(entry, &tag) == -1) {
+        if (acl_get_tag_type(entry, &tag) == -1)
+        {
             return errno;
         }
+
+        if (tag == ACL_USER) {
+
+        }
     }
-    
 
- 
-
-    acl_free(acl)
+    acl_free(acl);
 
     return 0;
 }
