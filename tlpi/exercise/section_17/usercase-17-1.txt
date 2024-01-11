@@ -1,0 +1,12 @@
+Input tag: u/g
+
+- ID trùng owner của file
+    - ACL_USER_OBJ (u)
+    - ACL_GROUP_OBJ (g)
+- ID không trùng với owner của file
+    - Tìm thấy trong acl_qualifier
+        - ACL_USER (u)
+        - ACL_GROUP (g)
+        Có kèm ACL_MASK
+    - Không tìm thấy
+        - ACL_OTHER

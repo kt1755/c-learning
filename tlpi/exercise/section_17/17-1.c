@@ -1,5 +1,5 @@
 /***************/
-// gcc 17-1.c ugid_functions.c -o 17-1.out
+// gcc 17-1.c ugid_functions.c -o 17-1.out -lacl
 /***************/
 
 #include <stdio.h>
@@ -48,20 +48,46 @@ int main(int argc, char *argv[])
     gid_t groupID;
     uid_t userID;
 
+    int id;
+
     acl_tag_t tagSelected;
     bool showMask = false;
 
+    struct stat fileStat;
+    if ((stat(fileName, &fileStat)) == -1)
+    {
+        perror("Cannot get stat of file");
+        return EXIT_FAILURE;
+    }
 
     switch (*type)
     {
     case 'u':
-        userID = userIdFromName(idStr);
-        tagSelected = ACL_USER;
+        id = userIdFromName(idStr);
+
+        if (fileStat.st_uid != id)
+        {
+            tagSelected = ACL_USER;
+            showMask = true;
+        }
+        else
+        {
+            tagSelected = ACL_USER_OBJ;
+        }
         break;
 
     case 'g':
-        groupID = groupIdFromName(idStr);
-        tagSelected = ACL_GROUP;
+        id = groupIdFromName(idStr);
+
+        if (fileStat.st_uid != userID)
+        {
+            tagSelected = ACL_GROUP_OBJ;
+            showMask = true;
+        }
+        else
+        {
+            tagSelected = ACL_GROUP;
+        }
         showMask = true;
         break;
 
@@ -72,6 +98,8 @@ int main(int argc, char *argv[])
     acl_t acl = acl_get_file(fileName, ACL_TYPE_ACCESS);
     acl_entry_t entry;
     int r;
+    bool found = false;
+    acl_permset_t permset;
     for (r = acl_get_entry(acl, ACL_FIRST_ENTRY, &entry); r > 0; r = acl_get_entry(acl, ACL_NEXT_ENTRY, &entry))
     {
         acl_tag_t tag;
@@ -80,12 +108,21 @@ int main(int argc, char *argv[])
             return errno;
         }
 
-        if (tag == ACL_USER) {
+        if (tag == tagSelected)
+        {
+            if (tag == ACL_USER_OBJ || tag == ACL_GROUP_OBJ) {
+                
+                acl_get_permset(entry, &permset);
+            } else if (tag == ACL_USER || tag == ACL_GROUP) {
 
+            }
         }
     }
 
-    acl_free(acl);
+    if (acl_free(acl) == -1) {
+        perror("acl_free");
+        return EXIT_FAILURE;
+    }
 
     return 0;
 }
