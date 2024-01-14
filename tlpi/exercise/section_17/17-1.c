@@ -52,6 +52,7 @@ int main(int argc, char *argv[])
 
     acl_tag_t tagSelected;
     bool showMask = false;
+    bool isOwner = false;
 
     struct stat fileStat;
     if ((stat(fileName, &fileStat)) == -1)
@@ -73,6 +74,7 @@ int main(int argc, char *argv[])
         else
         {
             tagSelected = ACL_USER_OBJ;
+            isOwner = true;
         }
         break;
 
@@ -87,6 +89,7 @@ int main(int argc, char *argv[])
         else
         {
             tagSelected = ACL_GROUP;
+            isOwner = true;
         }
         showMask = true;
         break;
@@ -97,9 +100,13 @@ int main(int argc, char *argv[])
 
     acl_t acl = acl_get_file(fileName, ACL_TYPE_ACCESS);
     acl_entry_t entry;
-    int r;
+    int r, pemVal;
     bool found = false;
     acl_permset_t permset;
+    uid_t *uid;
+    gid_t *gid;
+    int *referID;
+
     for (r = acl_get_entry(acl, ACL_FIRST_ENTRY, &entry); r > 0; r = acl_get_entry(acl, ACL_NEXT_ENTRY, &entry))
     {
         acl_tag_t tag;
@@ -110,16 +117,52 @@ int main(int argc, char *argv[])
 
         if (tag == tagSelected)
         {
-            if (tag == ACL_USER_OBJ || tag == ACL_GROUP_OBJ) {
-                
-                acl_get_permset(entry, &permset);
-            } else if (tag == ACL_USER || tag == ACL_GROUP) {
+            if (tag == ACL_USER || tag == ACL_GROUP)
+            {
+                referID = acl_get_qualifier(entry);
+                if (uidreferID == NULL)
+                {
+                    perror("acl_get_qualifier");
+                }
 
+                if (*referID != id)
+                    continue;
             }
+
+            if (acl_get_permset(entry, &permset) == -1)
+            {
+                perror("Get pemset");
+                return EXIT_FAILURE;
+            }
+
+            pemVal = acl_get_perm(permset, ACL_READ);
+            if (pemVal == -1)
+            {
+                perror("acl_get_pem ACL_READ");
+                return -1;
+            }
+            printf("%c", (pemVal == 1) ? 'r':'-');
+
+            pemVal = acl_get_perm(permset, ACL_WRITE);
+            if (pemVal == -1)
+            {
+                perror("acl_get_pem ACL_WRITE");
+                return -1;
+            }
+            printf("%c", (pemVal == 1) ? 'r':'-');
+
+            pemVal = acl_get_perm(permset, ACL_EXECUTE);
+            if (pemVal == -1)
+            {
+                perror("acl_get_pem ACL_EXECUTE");
+                return -1;
+            }
+            printf("%c", (pemVal == 1) ? 'r':'-');
         }
     }
 
-    if (acl_free(acl) == -1) {
+    if (acl_free(acl) == -1)
+    {
         perror("acl_free");
         return EXIT_FAILURE;
     }

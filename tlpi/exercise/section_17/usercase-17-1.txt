@@ -10,3 +10,9 @@ Input tag: u/g
         Có kèm ACL_MASK
     - Không tìm thấy
         - ACL_OTHER
+
+- Luôn luôn cần lấy pemset
+    - CHỉ lựa chọn pemset nào khi lọc
+
+Flow:
+1. Lấy ra tag type
