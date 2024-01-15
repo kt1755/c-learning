@@ -81,17 +81,17 @@ int main(int argc, char *argv[])
     case 'g':
         id = groupIdFromName(idStr);
 
-        if (fileStat.st_uid != userID)
+        if (fileStat.st_gid != id)
         {
-            tagSelected = ACL_GROUP_OBJ;
+            tagSelected = ACL_GROUP;
             showMask = true;
         }
         else
         {
-            tagSelected = ACL_GROUP;
+            tagSelected = ACL_GROUP_OBJ;
             isOwner = true;
         }
-        showMask = true;
+        // showMask = true;
         break;
 
     default:
@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
             if (tag == ACL_USER || tag == ACL_GROUP)
             {
                 referID = acl_get_qualifier(entry);
-                if (uidreferID == NULL)
+                if (referID == NULL)
                 {
                     perror("acl_get_qualifier");
                 }
@@ -128,6 +128,12 @@ int main(int argc, char *argv[])
                 if (*referID != id)
                     continue;
             }
+
+            found = true;
+
+            printf("Found!\n");
+
+            printf("%s: ", idStr);
 
             if (acl_get_permset(entry, &permset) == -1)
             {
@@ -141,7 +147,7 @@ int main(int argc, char *argv[])
                 perror("acl_get_pem ACL_READ");
                 return -1;
             }
-            printf("%c", (pemVal == 1) ? 'r':'-');
+            printf("%c", (pemVal == 1) ? 'r' : '-');
 
             pemVal = acl_get_perm(permset, ACL_WRITE);
             if (pemVal == -1)
@@ -149,7 +155,7 @@ int main(int argc, char *argv[])
                 perror("acl_get_pem ACL_WRITE");
                 return -1;
             }
-            printf("%c", (pemVal == 1) ? 'r':'-');
+            printf("%c", (pemVal == 1) ? 'w' : '-');
 
             pemVal = acl_get_perm(permset, ACL_EXECUTE);
             if (pemVal == -1)
@@ -157,7 +163,81 @@ int main(int argc, char *argv[])
                 perror("acl_get_pem ACL_EXECUTE");
                 return -1;
             }
-            printf("%c", (pemVal == 1) ? 'r':'-');
+            printf("%c", (pemVal == 1) ? 'x' : '-');
+
+            printf("\n");
+        }
+        else if (tag == ACL_MASK && showMask && found)
+        {
+            printf("Mask: ");
+
+            if (acl_get_permset(entry, &permset) == -1)
+            {
+                perror("Get pemset");
+                return EXIT_FAILURE;
+            }
+
+            pemVal = acl_get_perm(permset, ACL_READ);
+            if (pemVal == -1)
+            {
+                perror("acl_get_pem ACL_READ");
+                return -1;
+            }
+            printf("%c", (pemVal == 1) ? 'r' : '-');
+
+            pemVal = acl_get_perm(permset, ACL_WRITE);
+            if (pemVal == -1)
+            {
+                perror("acl_get_pem ACL_WRITE");
+                return -1;
+            }
+            printf("%c", (pemVal == 1) ? 'w' : '-');
+
+            pemVal = acl_get_perm(permset, ACL_EXECUTE);
+            if (pemVal == -1)
+            {
+                perror("acl_get_pem ACL_EXECUTE");
+                return -1;
+            }
+            printf("%c", (pemVal == 1) ? 'x' : '-');
+
+            printf("\n");
+        }
+        else if (tag == ACL_OTHER && !found)
+        {
+            printf("Other: ");
+
+            if (acl_get_permset(entry, &permset) == -1)
+            {
+                perror("Get pemset");
+                return EXIT_FAILURE;
+            }
+
+            pemVal = acl_get_perm(permset, ACL_READ);
+            if (pemVal == -1)
+            {
+                perror("acl_get_pem ACL_READ");
+                return -1;
+            }
+            printf("%c", (pemVal == 1) ? 'r' : '-');
+
+            pemVal = acl_get_perm(permset, ACL_WRITE);
+            if (pemVal == -1)
+            {
+                perror("acl_get_pem ACL_WRITE");
+                return -1;
+            }
+            printf("%c", (pemVal == 1) ? 'w' : '-');
+
+            pemVal = acl_get_perm(permset, ACL_EXECUTE);
+            if (pemVal == -1)
+            {
+                perror("acl_get_pem ACL_EXECUTE");
+                return -1;
+            }
+            printf("%c", (pemVal == 1) ? 'x' : '-');
+
+            printf("\n");
         }
     }
 
