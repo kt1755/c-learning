@@ -39,9 +39,19 @@ int main(int argc, char *argv[])
     printf("EA value: %s\n", eaValue);
     printf("File: %s\n", filePath);
 
+    #if __linux__
     if (setxattr(filePath, eaStr, eaValue, strlen(eaValue), 0) == -1) {
         perror("Set ea failed\n");
         return EXIT_FAILURE;
     }
+    #elif __APPLE__
+    if (setxattr(filePath, eaStr, eaValue, strlen(eaValue), 0, XATTR_NOSECURITY) == -1) {
+        perror("Set ea failed\n");
+        return EXIT_FAILURE;
+    }
+    #endif
+
+    printf("Change attr sucessful no 1\n");
+    
     return EXIT_SUCCESS;
 }
