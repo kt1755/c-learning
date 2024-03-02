@@ -25,14 +25,17 @@ int main(int argc, char const *argv[])
     sigemptyset(&pendingSig);
     sigaddset(&pendingSig, SIGSTOP);
 
-// Use SIG_BLOCK to check
+    // Use SIG_BLOCK to check
     if (sigprocmask(SIG_BLOCK, &pendingSig, &prevMask) == -1)
         errExit("sigprocmask1");
 
-    for (int n = 1; n < NSIG; n++)
-    {
-        act.__sigaction_u.__sa_handler = handler;
+    (void)signal(n, SIG_IGN);
 
-        (void)signal(n, SIG_IGN);
+    //...do something
+
+    // Restore handle
+    if (sigprocmask(SIG_SETMASK, &prevMask, NULL) == -1)
+    {
+        errExit("sigprocmask2");
     }
 }
