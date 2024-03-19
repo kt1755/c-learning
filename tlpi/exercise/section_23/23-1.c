@@ -21,27 +21,15 @@ static void handlesigalarm(int sig)
 
 unsigned int alarm_impl(unsigned int seconds)
 {
-    struct sigaction sa;
-    sigemptyset(&sa.sa_mask);
-    sa.sa_handler = handlesigalarm;
-    sa.sa_flags = 0;
-    if (sigaction(SIGALRM, &sa, NULL) == -1)
-    {
-        _exit(1);
-    }
-
-    struct itimerval ti;
+    struct itimerval ti, oldTi;
     ti.it_value.tv_sec = seconds;
 
-    if (setitimer(ITIMER_REAL, &ti, NULL) == -1)
+    if (setitimer(ITIMER_REAL, &ti, &oldTi) == -1)
     {
         _exit(1);
     };
 
-    if (gotAlarm == 1)
-    {
-        return remainSeconds;
-    }
+    return oldTi.it_value.tv_sec;
 }
 
 int main(int argc, char const *argv[])
