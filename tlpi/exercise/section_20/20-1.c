@@ -9,8 +9,7 @@
 \*************************************************************************/
 
 /* 
-gcc 20-1.c ../../lib/signal_functions.c ../../lib/error_functions.c ../../lib/get_num.c -I/Users/lap-01124/c-lea
-rning/tlpi/lib -o 20-1.out
+gcc 20-1.c ../../lib/signal_functions.c ../../lib/error_functions.c ../../lib/get_num.c -I/Users/lap-01124/c-learning/tlpi/lib -o 20-1.out
 */
 
 #define _GNU_SOURCE
