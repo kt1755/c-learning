@@ -15,6 +15,7 @@
 
    See also t_clock_nanosleep.c.
     macos cmd: clang t_nanosleep.c -o t_nanosleep.out ../../lib/signal_functions.c ../../lib/error_functions.c ../../lib/get_num.c -I/Users/lap-01124/c-learning/tlpi/lib
+    ubuntu cmd: gcc t_nanosleep.c -o t_nanosleep.out ../../lib/signal_functions.c ../../lib/error_functions.c ../../lib/get_num.c -I/home/thu/coding/tlpi/lib 
 
 */
 #define _POSIX_C_SOURCE 199309
@@ -22,7 +23,15 @@
 #include <sys/time.h>
 #include <time.h>
 #include <signal.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <errno.h>
+
+#ifdef TARGET_OS_MAC
 #include "/Users/lap-01124/c-learning/tlpi/lib/tlpi_hdr.h"
+#elif __linux
+#include "/home/thu/coding/tlpi/lib/tlpi_hdr.h"
+#endif
 
 static void
 sigintHandler(int sig)
@@ -33,7 +42,7 @@ sigintHandler(int sig)
 int main(int argc, char *argv[])
 {
     struct timeval start, finish;
-    struct timespec request, remain;
+    struct timespec request, remain, startspec, finishspec;
     struct sigaction sa;
     int s;
 
@@ -51,8 +60,11 @@ int main(int argc, char *argv[])
     if (sigaction(SIGINT, &sa, NULL) == -1)
         errExit("sigaction");
 
-    if (gettimeofday(&start, NULL) == -1)
-        errExit("gettimeofday");
+    // if (gettimeofday(&start, NULL) == -1)
+    //     errExit("gettimeofday");
+
+    if (clock_gettime(CLOCK_REALTIME, &startspec) == -1)
+        errExit("clock_gettime start");
 
     for (;;)
     {
@@ -63,19 +75,20 @@ int main(int argc, char *argv[])
             errExit("nanosleep");
         */
 
-       s = clock_gettime(CLOCK_REALTIME, &request);
-       if (s == -1 && errno != EINTR)
-            errExit("clock_gettime");
-
         // Continue implement
-        clock_nanosleep(CLOCK_REALTIME, 0, &request, &remain);
-        
-        
+        s = clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &request, &remain);
+        if (s == -1 && errno != EINTR)
+            errExit("nanosleep");
 
-        if (gettimeofday(&finish, NULL) == -1)
-            errExit("gettimeofday");
-        printf("Slept for: %9.6f secs\n", finish.tv_sec - start.tv_sec +
-                                              (finish.tv_usec - start.tv_usec) / 1000000.0);
+        // if (gettimeofday(&finish, NULL) == -1)
+        //     errExit("gettimeofday");
+        // printf("Slept for: %9.6f secs\n", finish.tv_sec - start.tv_sec +
+        //                                       (finish.tv_usec - start.tv_usec) / 1000000.0);
+
+        if (clock_gettime(CLOCK_REALTIME, &finishspec) == -1)
+            errExit("clock_gettime start");
+        printf("Slept for: %9.6f secs\n", finishspec.tv_sec - startspec.tv_sec +
+                                              (finishspec.tv_sec - startspec.tv_sec) / 1000000.0);    
 
         if (s == 0)
             break; /* nanosleep() completed */
