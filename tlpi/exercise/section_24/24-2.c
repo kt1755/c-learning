@@ -2,44 +2,51 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/wait.h>
 
 int main(int argc, char const *argv[])
 {
 
     pid_t childPid;
-    char *fileName = "~/tmp.txt";
-
+    char fileName[] = "/tmp/testXXXXXX";
+    setbuf(stdout, NULL);
 
     int fd = mkstemp(fileName);
     if (fd == -1)
     {
-        printf("mkstemp failed");
+        printf("mkstemp failed\n");
         exit(EXIT_FAILURE);
     }
 
     switch (childPid = vfork())
     {
     case -1:
-        printf("Fork failed...");
+        printf("Fork failed...\n");
         exit(EXIT_FAILURE);
         break;
 
     case 0: // child process
-        write(STDOUT_FILENO, "Executing", 9);
+        printf("Closing descriptor..\n");
         close(fd);
         break;
 
     default:
-        wait(NULL);
-        int size = write(fd, "aaa", 3);
-        if (size == -1) {
-            printf("Cannot write to closed fd (closed by child process)");
-        } else {
-            printf("Still write to file closed by child process");
-            close(fd);
-
-            unlink(fileName);
+        if (wait(NULL) == -1) {
+            printf("Wait error\n");
+            exit(EXIT_FAILURE);
         }
+
+        printf("Parent resume\n");
+
+        if ((fcntl(fd, F_GETFD)) == -1)
+        {
+            printf("Cannot write to closed fd (closed by child process)\n");
+        }
+        else
+        {
+            printf("Still write to file closed by child process\n");
+        }
+        
         break;
     }
 
