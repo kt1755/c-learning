@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
         if (clock_gettime(CLOCK_REALTIME, &finishspec) == -1)
             errExit("clock_gettime start");
         printf("Slept for: %9.6f secs\n", finishspec.tv_sec - startspec.tv_sec +
-                                              (finishspec.tv_sec - startspec.tv_sec) / 1000000.0);
+                                              (finishspec.tv_nsec - startspec.tv_nsec) / 1000000.0);
 
         if (s == 0)
             break; /* nanosleep() completed */
