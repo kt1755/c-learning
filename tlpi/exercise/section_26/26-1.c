@@ -40,29 +40,16 @@ main(int argc, char *argv[])
         
 
     case 0:     /* Child: immediately exits to become zombie */
-        printf("Child (PID=%ld) exiting\n", (long) getpid());
-        printf("Before _exit get ppid (PID=%ld):\n", (long) getppid());
-        _exit(EXIT_SUCCESS);
+        printf("Child (PID=%ld) have parent (PID=%ld)\n", (long) getpid(), (long) getppid());
+        
+        sleep(3); /* Give child a chance to parent killed immediately */
+        printf("After 3 second get ppid (PID=%ld):\n", (long) getppid());
 
+        exit(EXIT_SUCCESS);
         
 
     default:    /* Parent */
-        sleep(3);               /* Give child a chance to start and exit */
-        snprintf(cmd, CMD_SIZE, "ps | grep %s", basename(argv[0]));
-        printf("cmd: %s\n", cmd);
-        system(cmd);            /* View zombie child */
-
-        /* Now send the "sure kill" signal to the zombie */
-
-        if (kill(childPid, SIGKILL) == -1) {
-            perror("kill");
-        exit(EXIT_FAILURE);
-        }
-            
-        sleep(3);               /* Give child a chance to react to signal */
-        printf("After sending SIGKILL to zombie (PID=%ld):\n", (long) childPid);
-        system(cmd);            /* View zombie child again */
-
-        exit(EXIT_SUCCESS);
+        _exit(EXIT_SUCCESS);
+        
     }
 }
