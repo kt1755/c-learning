@@ -17,7 +17,9 @@
 */
 #include <signal.h>
 #include <libgen.h>             /* For basename() declaration */
-#include "tlpi_hdr.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
 
 #define CMD_SIZE 200
 
@@ -33,21 +35,30 @@ main(int argc, char *argv[])
 
     switch (childPid = fork()) {
     case -1:
-        errExit("fork");
+        perror("fork");
+        exit(EXIT_FAILURE);
+        
 
     case 0:     /* Child: immediately exits to become zombie */
         printf("Child (PID=%ld) exiting\n", (long) getpid());
+        printf("Before _exit get ppid (PID=%ld):\n", (long) getppid());
         _exit(EXIT_SUCCESS);
+
+        
 
     default:    /* Parent */
         sleep(3);               /* Give child a chance to start and exit */
         snprintf(cmd, CMD_SIZE, "ps | grep %s", basename(argv[0]));
+        printf("cmd: %s\n", cmd);
         system(cmd);            /* View zombie child */
 
         /* Now send the "sure kill" signal to the zombie */
 
-        if (kill(childPid, SIGKILL) == -1)
-            errMsg("kill");
+        if (kill(childPid, SIGKILL) == -1) {
+            perror("kill");
+        exit(EXIT_FAILURE);
+        }
+            
         sleep(3);               /* Give child a chance to react to signal */
         printf("After sending SIGKILL to zombie (PID=%ld):\n", (long) childPid);
         system(cmd);            /* View zombie child again */
