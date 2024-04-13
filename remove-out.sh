@@ -1,1 +1,1 @@
-find -f . | grep ".out$" | xargs rm -rf
+find | grep ".out$" | xargs rm -rf
