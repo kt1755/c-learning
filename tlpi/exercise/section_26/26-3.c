@@ -67,17 +67,18 @@ int main(int argc, char *argv[])
                                                 | WCONTINUED
 #endif
             );
-            if (childPid == -1)
-                errExit("waitpid");
-
-                waitid(P_ALL, 0, &infop, )
+            if (childPid == -1) {
+                perror("waitpid");
+                exit(EXIT_FAILURE);
+            }
+                
 
             /* Print status in hex, and as separate decimal bytes */
 
             printf("waitpid() returned: PID=%ld; status=0x%04x (%d,%d)\n",
                    (long)childPid,
                    (unsigned int)status, status >> 8, status & 0xff);
-            printWaitStatus(NULL, status);
+            // printWaitStatus(NULL, status);
 
             if (WIFEXITED(status) || WIFSIGNALED(status))
                 exit(EXIT_SUCCESS);
