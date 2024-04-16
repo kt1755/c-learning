@@ -34,7 +34,6 @@ int main(int argc, char *argv[])
 {
     int status;
     pid_t childPid;
-    siginfo_t infop;
 
     if (argc > 1 && strcmp(argv[1], "--help") == 0)
     {
