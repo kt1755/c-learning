@@ -1,0 +1,3 @@
+27-1
+Shell sẽ cố gắng execute file "xyz" trong thư mục "./dir1" và sẽ báo lỗi do ko có quyền execute file.
+Sau đó shell search tiếp tới thư mục "./dir2" tìm thấy "xyz" và execute thành công do lần execute ở dir1 đã bị lỗi.
