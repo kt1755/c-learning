@@ -15,13 +15,14 @@ int execlp_impl(const char *filename, const char *arg, ... /* , (char *) NULL */
     // Init args and evp
     va_list ap;
     char c, *s;
-    int d
-    char *p
-    int sizeArg = sizeof(arg) / sizeof()
-    va_start(ap, arg) ;
-    for (int i = 0; i )
+    int d;
+    char *p;
+    char params[255];
+    
+    va_start(ap, arg);
+    for (p = arg; *p != '\0';*p++ )
     {
-        if arg == NULL {
+        if (arg == NULL) {
             break;
         }
 
@@ -52,12 +53,11 @@ int execlp_impl(const char *filename, const char *arg, ... /* , (char *) NULL */
     {
         // Search file in $PATH
         char *pathEnv = getenv("PATH");
-        if pathEnv
-            == NULL
+        if (pathEnv       == NULL)
             {
                 // escape
                 perror("Không tìm thấy PATH env");
-                return EXIT_FAILURE
+                return EXIT_FAILURE;
             }
 
         char *ePath = strtok(pathEnv, ":");
@@ -65,6 +65,7 @@ int execlp_impl(const char *filename, const char *arg, ... /* , (char *) NULL */
         while (ePath != NULL)
         {
             fullEnvPath = strcat(filename, ePath);
+            execve(fullEnvPath, params, *environ);
         }
     }
 
