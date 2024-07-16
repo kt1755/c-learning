@@ -1,0 +1,5 @@
+29-1
+Main thread không thu thập được return valute của thread được tạo, tuy nhiên 2 thread vẫn execute bình thường.
+
+29-2
+Thread đang execute "main" sẽ bị exit, trong khi thread được tạo từ `pthread_create` không bị terminate
