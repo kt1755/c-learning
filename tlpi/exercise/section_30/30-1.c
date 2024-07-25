@@ -12,7 +12,18 @@
 gcc 30-1.c ../../lib/signal_functions.c ../../lib/error_functions.c ../../lib/get_num.c -I/Users/lap-01124/c-learning/tlpi/lib -o 30-1.out
 */
 
+#define _GNU_SOURCE
+#include <stdio.h>
 #include <pthread.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <limits.h>
+#include <sys/types.h>
+#include <sys/syscall.h>
+
+#include "error_functions.h"
+#include "get_num.h"
+
 
 #ifdef TARGET_OS_MAC
 #include "/Users/lap-01124/c-learning/tlpi/lib/tlpi_hdr.h"
@@ -23,17 +34,28 @@ gcc 30-1.c ../../lib/signal_functions.c ../../lib/error_functions.c ../../lib/ge
 static volatile int glob = 0; /* "volatile" prevents compiler optimizations
                                  of arithmetic operations on 'glob' */
 
+struct threadArg {
+    pthread_t* tid;
+    int* loop;
+    char* filePath;
+};
+
+
 /* Loop 'arg' times incrementing 'glob' */
 static void *threadFunc(void *arg)
 {
-    int loops = *((int *)arg);
+    // int loops = *((int *)arg);
+    struct threadArg* thra = ((struct threadArg*) arg);
     int loc, j;
 
-    for (j = 0; j < loops; j++)
+    FILE *fp = fopen("threadFunc.txt", "w+");
+    setbuf(fp, NULL);
+    for (j = 0; j < *(thra->loop); j++)
     {
-        loc = glob;
+        loc = *(thra->loop);
         loc++;
-        glob = loc;
+        fprintf(fp, "Glob in thread %ld is %d\n", *thra->tid, loc);
+        *thra->loop = loc;
     }
 
     return NULL;
@@ -43,13 +65,25 @@ int main(int argc, char *argv[])
 {
     pthread_t t1, t2;
     int loops, s;
+    struct threadArg thr1, thr2;
 
     loops = (argc > 1) ? getInt(argv[1], GN_GT_0, "num-loops") : 10000000;
 
-    s = pthread_create(&t1, NULL, threadFunc, &loops);
+    char* path = getcwd(NULL, PATH_MAX);
+    
+    thr1.tid = &t1;
+    thr1.loop = &loops;
+    thr1.filePath = path;
+
+    thr2.tid = &t2;
+    thr2.loop = &loops;
+    thr2.filePath = path;
+
+    s = pthread_create(&t1, NULL, threadFunc, &thr1);
     if (s != 0)
         errExitEN(s, "pthread_create");
-    s = pthread_create(&t2, NULL, threadFunc, &loops);
+        
+    s = pthread_create(&t2, NULL, threadFunc,  &thr2);
     if (s != 0)
         errExitEN(s, "pthread_create");
 
@@ -61,5 +95,8 @@ int main(int argc, char *argv[])
         errExitEN(s, "pthread_join");
 
     printf("glob = %d\n", glob);
+
+    free(path);
+    
     exit(EXIT_SUCCESS);
 }
