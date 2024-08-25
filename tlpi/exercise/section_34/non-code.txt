@@ -1,0 +1,9 @@
+1.
+    Draft:
+    - Parent vẫn tồn tại và thực thi bình thường do đã ignore process
+    - Các process con bị terminate do default behavior của signal
+
+    Lời giải:
+    - Những process nằm cùng process group nhưng không phải process con có thể bị terminate theo.
+    - Giải pháp:
+        - Có thể tạo group mới cho các process con sau khi fork() để khi cần terminate các process con không bị ảnh hưởng sang các process khác trong cùng shell pipeline.
