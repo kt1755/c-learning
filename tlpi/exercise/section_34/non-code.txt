@@ -7,3 +7,7 @@
     - Những process nằm cùng process group nhưng không phải process con có thể bị terminate theo.
     - Giải pháp:
         - Có thể tạo group mới cho các process con sau khi fork() để khi cần terminate các process con không bị ảnh hưởng sang các process khác trong cùng shell pipeline.
+
+5
+    Khi SIGTSTP unblock mà chưa set về default handler dispotition (SIG_DFL)  -> tại thời điểm process đang ở giữa đoạn call `sigprocmask` và `raise` khi process nhận 
+    tín hiệu Control-Z sẽ bị suspend ngay trong handler, khiến cho cần 2 tín hiệu SIGCONT mới có thể resume process: 1 để continue handler, tiếp tục block SIGTSTP, một

@@ -24,7 +24,10 @@
 #define _GNU_SOURCE /* Get strsignal() declaration from <string.h> */
 #include <string.h>
 #include <signal.h>
-#include "tlpi_hdr.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <errno.h>
+// #include "tlpi_hdr.h"
 
 static void handler(int sig) /* Handler for SIGHUP */
 {
@@ -40,7 +43,10 @@ int main(int argc, char *argv[])
     struct sigaction sa;
 
     if (argc < 2 || strcmp(argv[1], "--help") == 0)
-        usageErr("%s {d|s}... [ > sig.log 2>&1 ]\n", argv[0]);
+    {
+        printf("%s {d|s}... [ > sig.log 2>&1 ]\n", argv[0]);
+        return EXIT_FAILURE;
+    }
 
     setbuf(stdout, NULL); /* Make stdout unbuffered */
 
@@ -53,19 +59,26 @@ int main(int argc, char *argv[])
     { /* Create child processes */
         childPid = fork();
         if (childPid == -1)
-            errExit("fork");
+        {
+            perror("fork");
+            return EXIT_FAILURE;
+        }
 
         if (childPid == 0)
         {                          /* If child... */
             if (argv[j][0] == 'd') /* 'd' --> to different pgrp */
                 if (setpgid(0, 0) == -1)
-                    errExit("setpgid");
+                {
+                    perror("setpgid");
+                    return EXIT_FAILURE;
+                }
 
             sigemptyset(&sa.sa_mask);
             sa.sa_flags = 0;
             sa.sa_handler = handler;
             if (sigaction(SIGHUP, &sa, NULL) == -1)
-                errExit("sigaction");
+                perror("sigaction");
+            return EXIT_FAILURE;
             break; /* Child exits loop */
         }
     }
