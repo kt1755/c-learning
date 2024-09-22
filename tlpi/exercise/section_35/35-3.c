@@ -8,7 +8,7 @@
 #include <sys/times.h>
 #include <signal.h>
 
-static void consumeSigAlarm(int sig)
+static void consumeSigAlarm()
 {
     struct tms t;
     clock_t n, old_tick_quarter, old_tick_sec;
@@ -24,27 +24,36 @@ static void consumeSigAlarm(int sig)
             return;
         };
 
-        if ((quarter = (t.tms_utime - old_tick_quarter) / times_tick_conf) == 0.25)
+        if ((quarter = (t.tms_utime - old_tick_quarter) / times_tick_conf) >= 0.25)
         {
             // Do quarter action
             printf("Process %d cpu amount: %.2f secs\n", getpid(), quarter);
             old_tick_quarter = t.tms_utime;
         }
 
-        if ((sec = (t.tms_utime - old_tick_sec) / times_tick_conf) == 1)
+        if ((sec = (t.tms_utime - old_tick_sec) / times_tick_conf) >= 1)
         {
             // Do 1 sec action
-            printf("Process %d cpu execute: %.2f secs\n", getpid(), quarter);
+            printf("Process %d cpu execute: %.2f secs\n", getpid(), sec);
             old_tick_sec = t.tms_utime;
             sched_yield();
+        }
+
+        // terminate after 3 sec
+        if ((t.tms_utime / times_tick_conf) >= 3)
+        {
+            printf("Process %d reach 3 sec, terminating...\n", getpid());
+            exit(EXIT_SUCCESS);
         }
     }
 }
 
 int main(int argc, char *argv[])
 {
+
     struct sched_param sp;
-    sp.sched_priority = 0;
+    sp.sched_priority = sched_get_priority_max(SCHED_FIFO);
+    // sp.sched_priority = 1;
 
     if (sched_setscheduler(0, SCHED_FIFO, &sp) == -1)
     {
@@ -52,13 +61,15 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    struct sigaction sa;
-    sigemptyset(&sa.sa_mask);
-    if (sigaction(SIGALRM, &sa, NULL) == -1)
-    {
-        perror("sigaction SIGALRM");
-        return EXIT_FAILURE;
-    }
+    // struct sigaction sa;
+    // sigemptyset(&sa.sa_mask);
+    // sa.sa_handler = consumeSigAlarm;
+    // sa.sa_flags = 0;
+    // if (sigaction(SIGALRM, &sa, NULL) == -1)
+    // {
+    //     perror("sigaction SIGALRM");
+    //     return EXIT_FAILURE;
+    // }
 
     switch (fork())
     {
@@ -68,8 +79,9 @@ int main(int argc, char *argv[])
         break;
 
     default: // both parent and child
-
+        consumeSigAlarm();
         break;
     }
+
     return EXIT_SUCCESS;
 }
