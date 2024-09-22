@@ -7,9 +7,12 @@
 #include <sched.h>
 #include <sys/times.h>
 #include <signal.h>
+#include <fcntl.h>
+#include <sys/wait.h>
 
 static void consumeSigAlarm()
 {
+    printf("Start in process %d\n", getpid());
     struct tms t;
     clock_t n, old_tick_quarter, old_tick_sec;
     old_tick_quarter = 0;
@@ -25,26 +28,25 @@ static void consumeSigAlarm()
         };
 
         // Not reachable code, result show process log in 1 sec each
-        if ((quarter = (t.tms_utime - old_tick_quarter) / times_tick_conf) >= 0.25)
+        if ((quarter = (t.tms_stime - old_tick_quarter) / times_tick_conf) >= 0.25)
         {
             // Do quarter action
             printf("Process %d cpu amount: %.2f secs\n", getpid(), quarter);
-            old_tick_quarter = t.tms_utime;
+            old_tick_quarter = t.tms_stime;
         }
 
-        if ((sec = (t.tms_utime - old_tick_sec) / times_tick_conf) >= 1)
+        if ((sec = (t.tms_stime - old_tick_sec) / times_tick_conf) >= 1)
         {
             // Do 1 sec action
             printf("Process %d cpu execute: %.2f secs\n", getpid(), sec);
-            old_tick_sec = t.tms_utime;
+            old_tick_sec = t.tms_stime;
             sched_yield();
         }
 
         // terminate after 3 sec
-        if ((t.tms_utime / times_tick_conf) >= 3)
+        if ((t.tms_stime / times_tick_conf) >= 3)
         {
-            printf("Process %d reach 3 sec, terminating...\n", getpid());
-            exit(EXIT_SUCCESS);
+            return;
         }
     }
 }
@@ -72,6 +74,9 @@ int main(int argc, char *argv[])
     //     return EXIT_FAILURE;
     // }
 
+    setbuf(stdout, NULL);
+    fcntl(STDOUT_FILENO, F_SETFD, FD_CLOEXEC);
+
     switch (fork())
     {
     case -1:
@@ -79,10 +84,18 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
         break;
 
-    default: // both parent and child
+    case 0: // Child
         consumeSigAlarm();
-        break;
+        printf("Child %d reach end, terminating...\n", getpid());
+        _exit(EXIT_SUCCESS);
+
+    default: // parent
+        consumeSigAlarm();
+        wait(NULL);
+
+        printf("Parent %d reach end, terminating...\n", getpid());
+        exit(EXIT_SUCCESS);
     }
 
-    return EXIT_SUCCESS;
+    // return EXIT_SUCCESS;
 }
