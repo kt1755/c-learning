@@ -24,6 +24,7 @@ static void consumeSigAlarm()
             return;
         };
 
+        // Not reachable code, result show process log in 1 sec each
         if ((quarter = (t.tms_utime - old_tick_quarter) / times_tick_conf) >= 0.25)
         {
             // Do quarter action
