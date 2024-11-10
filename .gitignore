@@ -4,3 +4,6 @@
 
 *.out
 *.o
+
+.DS_Store
+tlpi/.DS_Store
