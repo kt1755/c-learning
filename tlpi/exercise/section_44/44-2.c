@@ -2,28 +2,35 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <errno.h>
+#include <signal.h>
+
+int pipeFd[2];
+FILE *fildHolder[1024];
+pid_t childPidHolder[1024];
 
 FILE *popenimpl(const char *command, const char *mode)
 {
-    int pipeFd[2];
+
+    pid_t childPid;
+
     if (mode[0] != 'r' && mode[0] != 'w' && mode[1] != '\0')
     {
-        perror("mode must be r or w\n");
-        exit(EXIT_FAILURE);
+        errno = EINVAL;
+        return NULL;
     }
 
     if (pipe(pipeFd) == -1)
     {
-        perror("pipe failed\n");
-        exit(EXIT_FAILURE);
+        return NULL;
     }
 
-    switch (fork())
+    switch (childPid = fork())
     {
     case -1:
-        perror("fork failed\n");
-        exit(EXIT_FAILURE);
-        break;
+        // errno will be set by fork
+        return NULL;
+
 
     case 0:
         if (mode[0] == 'r')
@@ -80,13 +87,58 @@ FILE *popenimpl(const char *command, const char *mode)
         fd = STDOUT_FILENO;
     }
 
-    return fdopen(fd, mode);
+    struct FILE *stream = fdopen(fd, mode);
+    if (stream == NULL)
+    {
+        close(fd);
+        return NULL;
+    }
+
+
+    for(int i = 0; i < 1024; i++)
+    {
+        if(fildHolder[i] == NULL)
+        {
+            fildHolder[i] = stream;
+            childPidHolder[i] = childPid;
+            break;
+        }
+    }
+
+
+    return stream;
 }
 
 int pcloseimpl(FILE *stream)
 {
-    wait(NULL);
-    return 0;
+    if (stream == NULL)
+    {
+        errno = EINVAL;
+        return -1;
+    }
+
+    int *status;
+    status = malloc(sizeof(int));
+
+    for(int i = 0; i < 1024; i++)
+    {
+        if(fildHolder[i] == stream)
+        {
+            if (fclose(stream) == -1) {
+                return -1;
+            }
+            fildHolder[i] = NULL;
+            kill(childPidHolder[i], SIGKILL);
+
+            if ( waitpid(childPidHolder[i], status, 0) == -1) {
+                return -1;
+            }
+            
+            break;
+        }
+    }
+
+    return *status;
 }
 
 int main(int argc, char const *argv[])
