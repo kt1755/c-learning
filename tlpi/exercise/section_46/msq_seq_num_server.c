@@ -34,6 +34,10 @@ static void serveRequest(int msqid, const struct requestMsg *msg)
     msgsnd(msqid, &respMsg, sizeof(int), 0);
 }
 
+static void cleanup(int msqid) {
+    msgctl(msqid, IPC_RMID, NULL);
+}
+
 int main(int argc, char const *argv[])
 {
     int opt, msqid;
@@ -65,6 +69,8 @@ int main(int argc, char const *argv[])
     {
         perror("sigaction");
     }
+
+    atexit(cleanup);
 
     for (;;)
     {
