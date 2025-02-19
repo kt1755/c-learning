@@ -7,6 +7,7 @@
 
 struct requestMsg {
     long mtype;
+    int clientId;
     int seq;
 };
 
