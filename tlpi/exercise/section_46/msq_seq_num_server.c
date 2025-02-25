@@ -10,6 +10,8 @@
 
 #include "msq_seq_num.h"
 
+static int msqid;
+
 // Avoid zombie process
 static void grimReaper(int sig)
 {
@@ -34,33 +36,29 @@ static void serveRequest(int msqid, const struct requestMsg *msg)
     msgsnd(msqid, &respMsg, sizeof(int), 0);
 }
 
-static void cleanup(int msqid) {
+static void cleanup(void)
+{
+    printf("Cleanup message queue identitfy %d\n", msqid);
     msgctl(msqid, IPC_RMID, NULL);
 }
 
 int main(int argc, char const *argv[])
 {
-    int opt, msqid;
+    int opt;
     struct requestMsg reqMsg;
     struct responseMsg respMsg;
     struct sigaction sa;
 
-    int flags = IPC_NOWAIT;
-
-    while ((opt = getopt(argc, argv, "s")) != -1)
-    {
-        if (opt == 's')
-        {
-            flags |= IPC_CREAT;
-        }
-    }
+    int flags = IPC_NOWAIT | IPC_CREAT;
 
     msqid = msgget(SERVER_KEY, flags | S_IRUSR | S_IWUSR);
     if (msqid == -1)
     {
         perror("msgget");
+        exit(EXIT_FAILURE);
     }
 
+    printf("Server start queue successful at id %d\n", msqid);
     sigemptyset(&sa.sa_mask);
     sa.sa_flags = SA_RESTART;
     sa.sa_handler = grimReaper;
@@ -95,6 +93,7 @@ int main(int argc, char const *argv[])
 
         if (pid == 0)
         { // Child process
+            printf("Child %d handle message of queue %d", getpid(), msqid);
             serveRequest(msqid, &reqMsg);
             _exit(EXIT_SUCCESS);
         }

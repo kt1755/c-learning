@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+ #include <stddef.h>
 
 #define SERVER_KEY 0x1aaaaaa1
 
@@ -11,7 +12,10 @@ struct requestMsg {
     int seq;
 };
 
+#define REQ_MESSAGE_SIZE (offsetof(struct requestMsg, mtype)))
+
 struct responseMsg {
     long mtype;
     int seq;
 };
+

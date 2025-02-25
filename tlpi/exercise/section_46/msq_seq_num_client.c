@@ -12,6 +12,8 @@
 
 static void handleResponse(const struct responseMsg *msg)
 {
+    int pid = getpid();
+    printf("Client %d get sequence %d\n", pid, msg->seq);
 }
 
 int main(int argc, char const *argv[])
@@ -28,15 +30,27 @@ int main(int argc, char const *argv[])
         exit(EXIT_FAILURE);
     }
 
+    printf("Client connect queue successful at id %d\n", msqid);
+
     reqMsg.mtype = 0;
     reqMsg.clientId = pid;
     reqMsg.seq = 10;
 
-    msgsnd(msqid, &reqMsg, 2 * sizeof(int), 0);
-
-    for (;;)
-    {
-        msgrcv(msqid, &respMsg, 2 * sizeof(int), pid, 0);
+    printf("Start send sequence %d to message queue\n", reqMsg.seq);
+    int sended = msgsnd(msqid, &reqMsg, 2 * sizeof(int), 0);
+    if (sended == -1) {
+        perror("Send to queue faield\n");
+        exit(EXIT_FAILURE);
     }
+
+    int receivedBytes = msgrcv(msqid, &respMsg, 2 * sizeof(int), pid, 0);
+    if (receivedBytes == -1)
+    {
+        perror("msgrcv");
+        exit(EXIT_FAILURE);
+    }
+
+    handleResponse(&respMsg);
+
     return 0;
 }
