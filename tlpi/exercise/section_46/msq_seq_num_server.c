@@ -7,6 +7,9 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <string.h>
 
 #include "msq_seq_num.h"
 
@@ -28,12 +31,12 @@ static void serveRequest(int msqid, const struct requestMsg *msg)
 {
     struct responseMsg respMsg;
 
-    printf("Serve client %d\n", msg->clientId);
+    printf("Serve client %s\n", msg->mtext);
 
-    respMsg.mtype = msg->clientId;
-    respMsg.seq = msg->seq;
+    respMsg.mtype = atoi(msg->mtext);
+    strncpy(respMsg.mtext, msg->mtext, REQ_MESSAGE_SIZE);
+    msgsnd(msqid, &respMsg, REQ_MESSAGE_SIZE, 0);
 
-    msgsnd(msqid, &respMsg, sizeof(int), 0);
 }
 
 static void cleanup(void)
@@ -72,7 +75,7 @@ int main(int argc, char const *argv[])
 
     for (;;)
     {
-        int received = msgrcv(msqid, &reqMsg, 2 * sizeof(int), 0, 0);
+        int received = msgrcv(msqid, &reqMsg, REQ_MESSAGE_SIZE, 0, 0);
         if (received == -1)
         {
             if (errno == EINTR)

@@ -7,13 +7,14 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <string.h>
 
 #include "msq_seq_num.h"
 
 static void handleResponse(const struct responseMsg *msg)
 {
     int pid = getpid();
-    printf("Client %d get sequence %d\n", pid, msg->seq);
+    printf("Client %d get sequence %s\n", pid, msg->mtext);
 }
 
 int main(int argc, char const *argv[])
@@ -33,17 +34,18 @@ int main(int argc, char const *argv[])
     printf("Client connect queue successful at id %d\n", msqid);
 
     reqMsg.mtype = 0;
-    reqMsg.clientId = pid;
-    reqMsg.seq = 10;
+    sprintf(reqMsg.mtext, "%d", pid);
+    
 
-    printf("Start send sequence %d to message queue\n", reqMsg.seq);
-    int sended = msgsnd(msqid, &reqMsg, 2 * sizeof(int), 0);
+    printf("Start send sequence %d to message queue\n", pid);
+    int sended = msgsnd(msqid, &reqMsg, REQ_MESSAGE_SIZE, 0);
     if (sended == -1) {
-        perror("Send to queue faield\n");
+        printf("Send to queue failed with errno: %d\n", errno);
+        perror("Send to queue failed");
         exit(EXIT_FAILURE);
     }
 
-    int receivedBytes = msgrcv(msqid, &respMsg, 2 * sizeof(int), pid, 0);
+    int receivedBytes = msgrcv(msqid, &respMsg, REQ_MESSAGE_SIZE, pid, 0);
     if (receivedBytes == -1)
     {
         perror("msgrcv");

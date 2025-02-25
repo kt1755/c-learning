@@ -2,20 +2,18 @@
 #include <stdlib.h>
  #include <stddef.h>
 
-#define SERVER_KEY 0x1aaaaaa1
-
-#define SIZE_OF_MSG = sizeof(int)
+#define SERVER_KEY 0x1aaaaa
+#define REQ_MESSAGE_SIZE 1024
 
 struct requestMsg {
     long mtype;
-    int clientId;
-    int seq;
+    char mtext[REQ_MESSAGE_SIZE];
 };
 
-#define REQ_MESSAGE_SIZE (offsetof(struct requestMsg, mtype)))
+
 
 struct responseMsg {
     long mtype;
-    int seq;
+    char mtext[REQ_MESSAGE_SIZE];
 };
 
