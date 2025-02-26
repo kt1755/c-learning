@@ -18,6 +18,7 @@ static int msqid;
 // Avoid zombie process
 static void grimReaper(int sig)
 {
+    printf("Grim reaper executed\n");
     int savedErrno = errno;
     while (waitpid(-1, NULL, WNOHANG) > 0)
     {
@@ -34,9 +35,8 @@ static void serveRequest(int msqid, const struct requestMsg *msg)
     printf("Serve client %s\n", msg->mtext);
 
     respMsg.mtype = atoi(msg->mtext);
-    strncpy(respMsg.mtext, msg->mtext, REQ_MESSAGE_SIZE);
-    msgsnd(msqid, &respMsg, REQ_MESSAGE_SIZE, 0);
-
+    strncpy(respMsg.mtext, msg->mtext, MESSAGE_DATA_SIZE);
+    msgsnd(msqid, &respMsg, RESP_MESSAGE_SIZE, 0);
 }
 
 static void cleanup(void)
@@ -52,7 +52,7 @@ int main(int argc, char const *argv[])
     struct responseMsg respMsg;
     struct sigaction sa;
 
-    int flags = IPC_NOWAIT | IPC_CREAT;
+    int flags = IPC_CREAT;
 
     msqid = msgget(SERVER_KEY, flags | S_IRUSR | S_IWUSR);
     if (msqid == -1)
@@ -71,11 +71,12 @@ int main(int argc, char const *argv[])
         perror("sigaction");
     }
 
+    printf("Assign atexit cleanup\n");
     atexit(cleanup);
 
     for (;;)
     {
-        int received = msgrcv(msqid, &reqMsg, REQ_MESSAGE_SIZE, 0, 0);
+        int received = msgrcv(msqid, &reqMsg, REQ_MESSAGE_SIZE, -1, 0);
         if (received == -1)
         {
             if (errno == EINTR)
@@ -96,7 +97,7 @@ int main(int argc, char const *argv[])
 
         if (pid == 0)
         { // Child process
-            printf("Child %d handle message of queue %d", getpid(), msqid);
+            printf("Child %d handle message of queue %d\n", getpid(), msqid);
             serveRequest(msqid, &reqMsg);
             _exit(EXIT_SUCCESS);
         }

@@ -33,7 +33,7 @@ int main(int argc, char const *argv[])
 
     printf("Client connect queue successful at id %d\n", msqid);
 
-    reqMsg.mtype = 0;
+    reqMsg.mtype = pid;
     sprintf(reqMsg.mtext, "%d", pid);
     
 
@@ -45,7 +45,7 @@ int main(int argc, char const *argv[])
         exit(EXIT_FAILURE);
     }
 
-    int receivedBytes = msgrcv(msqid, &respMsg, REQ_MESSAGE_SIZE, pid, 0);
+    int receivedBytes = msgrcv(msqid, &respMsg, RESP_MESSAGE_SIZE, pid, 0);
     if (receivedBytes == -1)
     {
         perror("msgrcv");
@@ -54,5 +54,5 @@ int main(int argc, char const *argv[])
 
     handleResponse(&respMsg);
 
-    return 0;
+    exit(EXIT_SUCCESS);
 }
