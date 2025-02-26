@@ -75,6 +75,9 @@ int main(int argc, char const *argv[])
 
     for (;;)
     {
+        // Message type -1 means receive only message type from client to server, not
+        // what server send back to client (have message type is pid of client) due to
+        // negative value of message type
         int received = msgrcv(msqid, &reqMsg, REQ_MESSAGE_SIZE, -1, 0);
         if (received == -1)
         {
