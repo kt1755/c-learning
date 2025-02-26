@@ -65,13 +65,12 @@ int main(int argc, char const *argv[])
     sigemptyset(&sa.sa_mask);
     sa.sa_flags = SA_RESTART;
     sa.sa_handler = grimReaper;
-
     if (sigaction(SIGCHLD, &sa, NULL) == -1)
     {
         perror("sigaction");
     }
 
-    printf("Assign atexit cleanup\n");
+        printf("Assign atexit cleanup\n");
     atexit(cleanup);
 
     for (;;)
